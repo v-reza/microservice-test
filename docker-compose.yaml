@@ -1,0 +1,40 @@
+version: "3.8"
+
+services:
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+  
+  service-1:
+    build: ./service-1
+    ports:
+      - "8000:3000"
+    environment:
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_QUEUE: service2_queue
+    depends_on:
+      - rabbitmq
+      - service-2
+    volumes:
+      - ./service-1:/home/node/app
+      - ./service-1:/app
+    restart: on-failure
+
+  service-2:
+    build: ./service-2
+    ports:
+      - "8001:3000"
+    environment:
+      RABBITMQ_URI: amqp://guest:guest@rabbitmq:5672
+      RABBITMQ_QUEUE: service2_queue
+    depends_on:
+      - rabbitmq
+    volumes:
+      - ./service-2:/home/node/app
+      - ./service-2:/app
+    restart: on-failure
